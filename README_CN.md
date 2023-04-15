@@ -3,7 +3,7 @@
 
 <h1 align="center">ChatGPT Next Web</h1>
 
-一键免费部署你的私人 ChatGPT 网页应用。
+一键免费部署你的私人 ChatGPT 网页应用
 
 [演示 Demo](https://chat-gpt-next-web.vercel.app/) / [反馈 Issues](https://github.com/Yidadaa/ChatGPT-Next-Web/issues) / [加入 Discord](https://discord.gg/zrhvHCr79N) / [QQ 群](https://user-images.githubusercontent.com/16968934/228190818-7dd00845-e9b9-4363-97e5-44c507ac76da.jpeg) / [打赏开发者](https://user-images.githubusercontent.com/16968934/227772541-5bcd52d8-61b7-488c-a203-0330d8006e2b.jpg) / [Donate](#捐赠-donate-usdt)
 
@@ -43,6 +43,7 @@
 - 在 Vercel 重新选择并部署，[请查看详细教程](./docs/vercel-cn.md#如何新建项目)。
 
 ### 打开自动更新
+
 当你 fork 项目之后，由于 Github 的限制，需要手动去你 fork 后的项目的 Actions 页面启用 Workflows，并启用 Upstream Sync Action，启用之后即可开启每小时定时自动更新：
 
 ![自动更新](./docs/images/enable-actions.jpg)
