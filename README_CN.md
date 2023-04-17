@@ -86,17 +86,13 @@ OpanAI 密钥，你在 openai 账户页面申请的 api key。
 
 ### `BASE_URL` （可选）
 
-> Default: `api.openai.com`
+> Default: `https://api.openai.com`
+
+> Examples: `http://your-openai-proxy.com`
 
 OpenAI 接口代理 URL，如果你手动配置了 openai 接口代理，请填写此选项。
 
-### `PROTOCOL` （可选）
-
-> Default: `https`
-
-> Values: `http` | `https`
-
-OpenAI 代理接口协议，如果遇到 ssl 证书问题，请尝试通过此选项设置为 http。
+> 如果遇到 ssl 证书问题，请将 `BASE_URL` 的协议设置为 http。
 
 ## 开发
 

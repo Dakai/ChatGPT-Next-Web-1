@@ -3,6 +3,7 @@ import { memo, useState, useRef, useEffect, useLayoutEffect } from "react";
 
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
+import RenameIcon from "../icons/rename.svg";
 import ExportIcon from "../icons/share.svg";
 import ReturnIcon from "../icons/return.svg";
 import CopyIcon from "../icons/copy.svg";
@@ -18,6 +19,7 @@ import LightIcon from "../icons/light.svg";
 import DarkIcon from "../icons/dark.svg";
 import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
+import StopIcon from "../icons/pause.svg";
 
 import {
   Message,
@@ -353,8 +355,8 @@ export function ChatActions(props: {
 }) {
   const chatStore = useChatStore();
 
+  // switch themes
   const theme = chatStore.config.theme;
-
   function nextTheme() {
     const themes = [Theme.Auto, Theme.Light, Theme.Dark];
     const themeIndex = themes.indexOf(theme);
@@ -363,8 +365,20 @@ export function ChatActions(props: {
     chatStore.updateConfig((config) => (config.theme = nextTheme));
   }
 
+  // stop all responses
+  const couldStop = ControllerPool.hasPending();
+  const stopAll = () => ControllerPool.stopAll();
+
   return (
     <div className={chatStyle["chat-input-actions"]}>
+      {couldStop && (
+        <div
+          className={`${chatStyle["chat-input-action"]} clickable`}
+          onClick={stopAll}
+        >
+          <StopIcon />
+        </div>
+      )}
       {!props.hitBottom && (
         <div
           className={`${chatStyle["chat-input-action"]} clickable`}
@@ -442,16 +456,6 @@ export function Chat() {
     inputRef.current?.focus();
   };
 
-  const scrollInput = () => {
-    const dom = inputRef.current;
-    if (!dom) return;
-    const paddingBottomNum: number = parseInt(
-      window.getComputedStyle(dom).paddingBottom,
-      10,
-    );
-    dom.scrollTop = dom.scrollHeight - dom.offsetHeight + paddingBottomNum;
-  };
-
   // auto grow input
   const [inputRows, setInputRows] = useState(2);
   const measure = useDebouncedCallback(
@@ -491,7 +495,6 @@ export function Chat() {
   // only search prompts when user input is short
   const SEARCH_TEXT_LIMIT = 30;
   const onInput = (text: string) => {
-    scrollInput();
     setUserInput(text);
     const n = text.trim().length;
 
@@ -549,21 +552,45 @@ export function Chat() {
     }
   };
 
-  const onResend = (botIndex: number) => {
+  const findLastUesrIndex = (messageId: number) => {
     // find last user input message and resend
-    for (let i = botIndex; i >= 0; i -= 1) {
-      if (messages[i].role === "user") {
-        setIsLoading(true);
-        chatStore
-          .onUserInput(messages[i].content)
-          .then(() => setIsLoading(false));
-        chatStore.updateCurrentSession((session) =>
-          session.messages.splice(i, 2),
-        );
-        inputRef.current?.focus();
-        return;
+    let lastUserMessageIndex: number | null = null;
+    for (let i = 0; i < session.messages.length; i += 1) {
+      const message = session.messages[i];
+      if (message.id === messageId) {
+        break;
+      }
+      if (message.role === "user") {
+        lastUserMessageIndex = i;
       }
     }
+
+    return lastUserMessageIndex;
+  };
+
+  const deleteMessage = (userIndex: number) => {
+    chatStore.updateCurrentSession((session) =>
+      session.messages.splice(userIndex, 2),
+    );
+  };
+
+  const onDelete = (botMessageId: number) => {
+    const userIndex = findLastUesrIndex(botMessageId);
+    if (userIndex === null) return;
+    deleteMessage(userIndex);
+  };
+
+  const onResend = (botMessageId: number) => {
+    // find last user input message and resend
+    const userIndex = findLastUesrIndex(botMessageId);
+    if (userIndex === null) return;
+
+    setIsLoading(true);
+    chatStore
+      .onUserInput(session.messages[userIndex].content)
+      .then(() => setIsLoading(false));
+    deleteMessage(userIndex);
+    inputRef.current?.focus();
   };
 
   const config = useChatStore((state) => state.config);
@@ -615,6 +642,13 @@ export function Chat() {
 
   const [showPromptModal, setShowPromptModal] = useState(false);
 
+  const renameSession = () => {
+    const newTopic = prompt(Locale.Chat.Rename, session.topic);
+    if (newTopic && newTopic !== session.topic) {
+      chatStore.updateCurrentSession((session) => (session.topic = newTopic!));
+    }
+  };
+
   // Auto focus
   //useEffect(() => {
   //  if (isMobileScreen() && !sidebarCollapse) return;
@@ -627,14 +661,7 @@ export function Chat() {
         <div className={styles["window-header-title"]}>
           <div
             className={`${styles["window-header-main-title"]} ${styles["chat-body-title"]}`}
-            onClickCapture={() => {
-              const newTopic = prompt(Locale.Chat.Rename, session.topic);
-              if (newTopic && newTopic !== session.topic) {
-                chatStore.updateCurrentSession(
-                  (session) => (session.topic = newTopic!),
-                );
-              }
-            }}
+            onClickCapture={renameSession}
           >
             {session.topic}
           </div>
@@ -655,12 +682,9 @@ export function Chat() {
           </div>
           <div className={styles["window-action-button"]}>
             <IconButton
-              icon={<BrainIcon />}
+              icon={<RenameIcon />}
               bordered
-              title={Locale.Chat.Actions.CompressedHistory}
-              onClick={() => {
-                setShowPromptModal(true);
-              }}
+              onClick={renameSession}
             />
           </div>
           <div className={styles["window-action-button"]}>
@@ -739,12 +763,20 @@ export function Chat() {
                             {Locale.Chat.Actions.Stop}
                           </div>
                         ) : (
-                          <div
-                            className={styles["chat-message-top-action"]}
-                            onClick={() => onResend(i)}
-                          >
-                            {Locale.Chat.Actions.Retry}
-                          </div>
+                          <>
+                            <div
+                              className={styles["chat-message-top-action"]}
+                              onClick={() => onDelete(message.id ?? i)}
+                            >
+                              {Locale.Chat.Actions.Delete}
+                            </div>
+                            <div
+                              className={styles["chat-message-top-action"]}
+                              onClick={() => onResend(message.id ?? i)}
+                            >
+                              {Locale.Chat.Actions.Retry}
+                            </div>
+                          </>
                         )}
 
                         <div
