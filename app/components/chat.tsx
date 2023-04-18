@@ -162,7 +162,12 @@ function PromptToast(props: {
             {Locale.Context.Toast(context.length)}
           </span>
 
-          <CloseIcon onClick={() => {}} />
+          <CloseIcon
+            role="button"
+            onClick={() => {
+              props.setShowToast(false);
+            }}
+          />
         </div>
       )}
       {props.showModal && (
