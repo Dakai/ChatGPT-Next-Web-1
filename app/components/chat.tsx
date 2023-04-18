@@ -162,11 +162,7 @@ function PromptToast(props: {
             {Locale.Context.Toast(context.length)}
           </span>
 
-          <CloseIcon
-            onClick={() => {
-              setShowToast(false);
-            }}
-          />
+          <CloseIcon onClick={() => {}} />
         </div>
       )}
       {props.showModal && (
@@ -432,7 +428,6 @@ export function Chat() {
       state.currentSession(),
       state.currentSessionIndex,
     ]);
-
   const fontSize = useChatStore((state) => state.config.fontSize);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -663,10 +658,14 @@ export function Chat() {
   }, [hitBottom]);
 
   // Auto focus
-  //useEffect(() => {
-  //  if (isMobileScreen() && !sidebarCollapse) return;
-  //  inputRef.current?.focus();
-  //}, [sidebarCollapse]);
+  useEffect(() => {
+    //  if (isMobileScreen() && !sidebarCollapse) return;
+    //  inputRef.current?.focus();
+    //}, [sidebarCollapse]);
+    if (isMobileScreen() && sidebarCollapse) return;
+    inputRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={styles.chat} key={session.id}>

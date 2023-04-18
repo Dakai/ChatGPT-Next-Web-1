@@ -46,11 +46,7 @@ export function ChatItem(props: {
               : ":)"}
           </div>
           <div
-            className={
-              sidebarCollapse
-                ? styles["chat-item-delete-collapse"]
-                : styles["chat-item-delete"]
-            }
+            className={styles["chat-item-delete-collapse"]}
             onClick={props.onDelete}
           >
             <DeleteIcon />
@@ -87,14 +83,21 @@ export function ChatItem(props: {
 }
 
 export function ChatList() {
-  const [sidebarCollapse, sessions, selectedIndex, selectSession, moveSession] =
-    useChatStore((state) => [
-      state.sidebarCollapse,
-      state.sessions,
-      state.currentSessionIndex,
-      state.selectSession,
-      state.moveSession,
-    ]);
+  const [
+    sidebarCollapse,
+    sessions,
+    selectedIndex,
+    selectSession,
+    removeSession,
+    moveSession,
+  ] = useChatStore((state) => [
+    state.sidebarCollapse,
+    state.sessions,
+    state.currentSessionIndex,
+    state.selectSession,
+    state.removeSession,
+    state.moveSession,
+  ]);
   const chatStore = useChatStore();
   const onDragEnd: OnDragEndResponder = (result: any) => {
     const { destination, source } = result;
@@ -112,9 +115,11 @@ export function ChatList() {
 
   return (
     <>
-      <div className={styles["gpt-logo-collapse"]}>
-        {sidebarCollapse ? <BotIcon /> : null}
-      </div>
+      {sidebarCollapse && (
+        <div className={styles["gpt-logo-collapse"]}>
+          <BotIcon />
+        </div>
+      )}
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="chat-list">
           {(provided: any) => (

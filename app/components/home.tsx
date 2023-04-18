@@ -132,20 +132,21 @@ const useHasHydrated = () => {
 };
 
 function _Home() {
-  const [createNewSession, currentIndex, removeSession] = useChatStore(
-    (state) => [
-      state.newSession,
-      state.currentSessionIndex,
-      state.removeSession,
-    ],
-  );
-  const chatStore = useChatStore();
-  const loading = !useHasHydrated();
-  const [sidebarCollapse, setSideBarCollapse] = useChatStore((state) => [
+  const [
+    sidebarCollapse,
+    setSideBarCollapse,
+    createNewSession,
+    currentIndex,
+    removeSession,
+  ] = useChatStore((state) => [
     state.sidebarCollapse,
     state.setSidebarCollapse,
+    state.newSession,
+    state.currentSessionIndex,
+    state.removeSession,
   ]);
-
+  const chatStore = useChatStore();
+  const loading = !useHasHydrated();
   // setting
   const [openSettings, setOpenSettings] = useState(false);
   const config = useChatStore((state) => state.config);
@@ -154,6 +155,38 @@ function _Home() {
   const { onDragMouseDown } = useDragSideBar();
 
   useSwitchTheme();
+
+  // the two useEffects are for enable animation of the sidebar collapse in mobile screen
+  const [width, setWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const [sidebarStyle, setSidebarStyles] = useState({});
+  useEffect(() => {
+    if (sidebarCollapse && isMobileScreen()) {
+      setTimeout(() => {
+        setSidebarStyles({
+          display: "none",
+        });
+      }, 100);
+    } else {
+      setTimeout(() => {
+        setSidebarStyles({
+          display: "flex",
+        });
+      }, 100);
+    }
+  }, [sidebarCollapse, width]);
 
   if (loading) {
     return <Loading />;
@@ -168,35 +201,22 @@ function _Home() {
       }`}
     >
       <div
+        style={{ ...sidebarStyle }}
         className={
           sidebarCollapse ? styles["sidebar-collapse"] : styles["sidebar"]
         }
       >
-        <div
-          className={
-            sidebarCollapse
-              ? styles["sidebar-header-collapse"]
-              : styles["sidebar-header"]
-          }
-        >
-          {sidebarCollapse ? null : (
-            <>
-              <div className={styles["sidebar-title"]}>ChatGPT Next</div>
-              <div className={styles["sidebar-sub-title"]}>
-                Build your own AI assistant.
-              </div>
-            </>
-          )}
-          {sidebarCollapse ? (
-            <div className={styles["sidebar-logo-collapse"]}>
-              <ChatGptIcon />
+        {!sidebarCollapse && (
+          <div className={styles["sidebar-header"]}>
+            <div className={styles["sidebar-title"]}>ChatGPT Next</div>
+            <div className={styles["sidebar-sub-title"]}>
+              Build your own AI assistant.
             </div>
-          ) : (
             <div className={styles["sidebar-logo"]}>
               <ChatGptIcon />
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <div
           className={styles["sidebar-body"]}
@@ -212,118 +232,120 @@ function _Home() {
         >
           <ChatList />
         </div>
-
-        <div
-          className={
-            sidebarCollapse
-              ? styles["sidebar-tail-collapse"]
-              : styles["sidebar-tail"]
-          }
-        >
-          <div
-            className={
-              sidebarCollapse
-                ? styles["sidebar-actions-collapse"]
-                : styles["sidebar-actions"]
-            }
-          >
-            <div
-              className={
-                sidebarCollapse
-                  ? styles["sidebar-action-collapse"]
-                  : styles["sidebar-action"]
-              }
-            >
-              {sidebarCollapse ? (
+        {sidebarCollapse ? (
+          <div className={styles["sidebar-tail-collapse"]}>
+            <div className={styles["sidebar-actions-collapse"]}>
+              <div className={styles["sidebar-action-collapse"]}>
                 <IconButton
                   icon={<RightIcon />}
                   onClick={() => {
                     setSideBarCollapse(false);
                   }}
                 />
-              ) : (
+              </div>
+              <div className={styles["sidebar-action-collapse"]}>
                 <IconButton
-                  icon={<LeftIcon />}
+                  icon={<CloseIcon />}
+                  onClick={chatStore.deleteSession}
+                />
+              </div>
+              <div className={styles["sidebar-action-collapse"]}>
+                <IconButton
+                  icon={<SettingsIcon />}
                   onClick={() => {
+                    setOpenSettings(true);
                     setSideBarCollapse(true);
                   }}
+                  shadow
                 />
-              )}
+              </div>
+              <div className={styles["sidebar-action-collapse"]}>
+                <a href={REPO_URL} target="_blank">
+                  <IconButton icon={<GithubIcon />} shadow />
+                </a>
+              </div>
             </div>
-            <div
-              className={
-                sidebarCollapse
-                  ? styles["sidebar-action-collapse"]
-                  : styles["sidebar-action"] + " " + styles.mobile
-              }
-            >
+            <div>
               <IconButton
-                icon={<CloseIcon />}
-                onClick={chatStore.deleteSession}
-              />
-            </div>
-
-            <div
-              className={
-                sidebarCollapse
-                  ? styles["sidebar-action-collapse"]
-                  : styles["sidebar-action"]
-              }
-            >
-              <IconButton
-                icon={<SettingsIcon />}
+                className={styles["sidebar-addIcon-collapse"]}
+                icon={<AddIcon />}
+                text={""}
                 onClick={() => {
-                  setOpenSettings(true);
+                  createNewSession();
                   setSideBarCollapse(true);
                 }}
                 shadow
               />
             </div>
-            <div
-              className={
-                sidebarCollapse
-                  ? styles["sidebar-action-collapse"]
-                  : styles["sidebar-action"]
-              }
-            >
-              <a href={REPO_URL} target="_blank">
-                <IconButton icon={<GithubIcon />} shadow />
-              </a>
+          </div>
+        ) : (
+          <div className={styles["sidebar-tail"]}>
+            <div className={styles["sidebar-actions"]}>
+              <div className={styles["sidebar-action"]}>
+                {sidebarCollapse ? (
+                  <IconButton
+                    icon={<RightIcon />}
+                    onClick={() => {
+                      setSideBarCollapse(false);
+                    }}
+                  />
+                ) : (
+                  <IconButton
+                    icon={<LeftIcon />}
+                    onClick={() => {
+                      setSideBarCollapse(true);
+                    }}
+                  />
+                )}
+              </div>
+              <div className={styles["sidebar-action"]}>
+                <IconButton
+                  icon={<CloseIcon />}
+                  onClick={chatStore.deleteSession}
+                />
+              </div>
+              <div className={styles["sidebar-action"]}>
+                <IconButton
+                  icon={<SettingsIcon />}
+                  onClick={() => {
+                    setOpenSettings(true);
+                    setSideBarCollapse(true);
+                  }}
+                  shadow
+                />
+              </div>
+              <div className={styles["sidebar-action"]}>
+                <a href={REPO_URL} target="_blank">
+                  <IconButton icon={<GithubIcon />} shadow />
+                </a>
+              </div>
+            </div>
+            <div>
+              <IconButton
+                icon={<AddIcon />}
+                // Auto hide Text 'Next Chat' when sidebar width shrinks
+                text={
+                  !isMobileScreen()
+                    ? chatStore.config.sidebarWidth <= 340
+                      ? ""
+                      : Locale.Home.NewChat
+                    : Locale.Home.NewChat
+                }
+                onClick={() => {
+                  createNewSession();
+                  setSideBarCollapse(true);
+                }}
+                shadow
+              />
             </div>
           </div>
-          <div
-            className={
-              sidebarCollapse
-                ? styles["sidebar-action-collapse"]
-                : styles["sidebar-action"]
-            }
-          >
-            <IconButton
-              icon={<AddIcon />}
-              text={
-                chatStore.config.sidebarWidth <= 285
-                  ? undefined
-                  : isMobileScreen()
-                  ? undefined
-                  : sidebarCollapse
-                  ? undefined
-                  : Locale.Home.NewChat
-              }
-              onClick={() => {
-                createNewSession();
-                setSideBarCollapse(true);
-              }}
-              shadow
-            />
-          </div>
-        </div>
+        )}
 
         <div
           className={styles["sidebar-drag"]}
           onMouseDown={(e) => onDragMouseDown(e as any)}
         ></div>
       </div>
-
       <div
         className={
           sidebarCollapse
