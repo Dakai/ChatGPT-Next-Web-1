@@ -584,7 +584,7 @@ export function Chat() {
     );
   };
 
-  const exportToImage = (i: number) => {
+  const exportAsImage = (i: number) => {
     if (divRefs.current[i]) {
       //get the color style from a div by classname 'markdown-body'
       const divElement = document.querySelector(
@@ -837,9 +837,9 @@ export function Chat() {
                         </div>
                         <div
                           className={styles["chat-message-top-action"]}
-                          onClick={() => exportToImage(i)}
+                          onClick={() => exportAsImage(i)}
                         >
-                          {"Image"}
+                          {Locale.Chat.Actions.ExportAsImage}
                         </div>
                       </div>
                     )}
