@@ -469,6 +469,7 @@ export const useChatStore = create<ChatStore>()(
 
         const context = session.context.slice();
 
+        // long term memory
         if (
           session.sendMemory &&
           session.memoryPrompt &&
@@ -478,9 +479,33 @@ export const useChatStore = create<ChatStore>()(
           context.push(memoryPrompt);
         }
 
-        const recentMessages = context.concat(
-          messages.slice(Math.max(0, n - config.historyMessageCount)),
+        // get short term and unmemoried long term memory
+        const shortTermMemoryMessageIndex = Math.max(
+          0,
+          n - config.historyMessageCount,
         );
+        const longTermMemoryMessageIndex = session.lastSummarizeIndex;
+        const oldestIndex = Math.max(
+          shortTermMemoryMessageIndex,
+          longTermMemoryMessageIndex,
+        );
+        const threshold = config.compressMessageLengthThreshold;
+
+        // get recent messages as many as possible
+        const reversedRecentMessages = [];
+        for (
+          let i = n - 1, count = 0;
+          i >= oldestIndex && count < threshold;
+          i -= 1
+        ) {
+          const msg = messages[i];
+          if (!msg || msg.isError) continue;
+          count += msg.content.length;
+          reversedRecentMessages.push(msg);
+        }
+
+        // concat
+        const recentMessages = context.concat(reversedRecentMessages.reverse());
 
         return recentMessages;
       },
@@ -549,7 +574,10 @@ export const useChatStore = create<ChatStore>()(
           config.compressMessageLengthThreshold,
         );
 
-        if (historyMsgLength > config.compressMessageLengthThreshold) {
+        if (
+          historyMsgLength > config.compressMessageLengthThreshold &&
+          session.sendMemory
+        ) {
           requestChatStream(
             toBeSummarizedMsgs.concat({
               role: "system",
