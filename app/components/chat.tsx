@@ -15,7 +15,7 @@ import AddIcon from "../icons/add.svg";
 import DeleteIcon from "../icons/delete.svg";
 import MaxIcon from "../icons/max.svg";
 import MinIcon from "../icons/min.svg";
-
+import CloseIcon from "../icons/close.svg";
 import LightIcon from "../icons/light.svg";
 import DarkIcon from "../icons/dark.svg";
 import AutoIcon from "../icons/auto.svg";
@@ -133,6 +133,7 @@ function PromptToast(props: {
   showToast?: boolean;
   showModal?: boolean;
   setShowModal: (_: boolean) => void;
+  setShowToast: (_: boolean) => void;
 }) {
   const chatStore = useChatStore();
   const session = chatStore.currentSession();
@@ -159,15 +160,21 @@ function PromptToast(props: {
   return (
     <div className={chatStyle["prompt-toast"]} key="prompt-toast">
       {props.showToast && (
-        <div
-          className={chatStyle["prompt-toast-inner"] + " clickable"}
-          role="button"
-          onClick={() => props.setShowModal(true)}
-        >
+        <div className={chatStyle["prompt-toast-inner"]}>
           <BrainIcon />
-          <span className={chatStyle["prompt-toast-content"]}>
+          <span
+            className={chatStyle["prompt-toast-content"] + " clickable"}
+            role="button"
+            onClick={() => props.setShowModal(true)}
+          >
             {Locale.Context.Toast(context.length)}
           </span>
+          <CloseIcon
+            role="button"
+            onClick={() => {
+              props.setShowToast(false);
+            }}
+          />
         </div>
       )}
       {props.showModal && (
@@ -361,6 +368,7 @@ export function ChatActions(props: {
   showPromptModal: () => void;
   scrollToBottom: () => void;
   hitBottom: boolean;
+  showPromptToast?: boolean;
 }) {
   const config = useAppConfig();
 
@@ -396,7 +404,7 @@ export function ChatActions(props: {
           <BottomIcon />
         </div>
       )}
-      {props.hitBottom && (
+      {(props.hitBottom || !props.showPromptToast) && (
         <div
           className={`${chatStyle["chat-input-action"]} clickable`}
           onClick={props.showPromptModal}
@@ -631,6 +639,7 @@ export function Chat() {
     );
 
   const [showPromptModal, setShowPromptModal] = useState(false);
+  const [showPromptToast, setShowPromptToast] = useState(false);
 
   const renameSession = () => {
     const newTopic = prompt(Locale.Chat.Rename, session.topic);
@@ -705,9 +714,10 @@ export function Chat() {
         </div>
 
         <PromptToast
-          showToast={!hitBottom}
+          showToast={showPromptToast}
           showModal={showPromptModal}
           setShowModal={setShowPromptModal}
+          setShowToast={setShowPromptToast}
         />
       </div>
 
@@ -816,6 +826,7 @@ export function Chat() {
           showPromptModal={() => setShowPromptModal(true)}
           scrollToBottom={scrollToBottom}
           hitBottom={hitBottom}
+          showPromptToast={showPromptToast}
         />
         <div className={styles["chat-input-panel-inner"]}>
           <textarea
