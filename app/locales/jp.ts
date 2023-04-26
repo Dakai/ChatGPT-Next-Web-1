@@ -1,5 +1,5 @@
-import { SubmitKey } from "../store/app";
 import type { LocaleType } from "./index";
+import { SubmitKey } from "../store/config";
 
 const jp: LocaleType = {
   WIP: "この機能は開発中です……",
