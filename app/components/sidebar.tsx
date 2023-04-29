@@ -129,6 +129,9 @@ export function SideBar(props: { className?: string }) {
             navigate(Path.Home);
           }
         }}
+        onDoubleClickCapture={() => {
+          chatStore.newSession();
+        }}
       >
         <ChatList narrow={shouldNarrow} />
       </div>
