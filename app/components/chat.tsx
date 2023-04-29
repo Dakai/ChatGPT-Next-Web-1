@@ -20,6 +20,7 @@ import DarkIcon from "../icons/dark.svg";
 import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
+import html2canvas from "html2canvas";
 
 import {
   Message,
@@ -575,6 +576,35 @@ export function Chat() {
     inputRef.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const divRefs = useRef<Array<HTMLDivElement>>([]);
+  const exportAsImage = (i: number) => {
+    if (divRefs.current[i]) {
+      //get the color style from a div by classname 'markdown-body'
+      const divElement = document.querySelector(
+        ".markdown-body",
+      ) as HTMLDivElement;
+      const color = window
+        .getComputedStyle(divElement)
+        .getPropertyValue("color");
+      console.log(color);
+      if (color !== "rgb(36, 41, 47)") {
+        divRefs.current[i].style.backgroundColor = "#1e1e1e";
+      }
+
+      divRefs.current[i].style.padding = "10px 10px 0px 10px";
+      html2canvas(divRefs.current[i]).then((canvas) => {
+        const imgData = canvas.toDataURL("image/png");
+        const img = new Image();
+        img.src = imgData;
+        const link = document.createElement("a");
+        link.href = imgData;
+        link.download = "chat.png";
+        link.click();
+      });
+      divRefs.current[i].style.padding = "0px";
+      divRefs.current[i].style.backgroundColor = "";
+    }
+  };
 
   return (
     <div className={styles.chat} key={session.id}>
@@ -713,22 +743,36 @@ export function Chat() {
                       >
                         {Locale.Chat.Actions.Copy}
                       </div>
+                      <div
+                        className={styles["chat-message-top-action"]}
+                        onClick={() => exportAsImage(i)}
+                      >
+                        {Locale.Chat.Actions.Copy === "复制"
+                          ? "导出图片"
+                          : "Exp.Img"}
+                      </div>
                     </div>
                   )}
-                  <Markdown
-                    content={message.content}
-                    loading={
-                      (message.preview || message.content.length === 0) &&
-                      !isUser
-                    }
-                    onContextMenu={(e) => onRightClick(e, message)}
-                    onDoubleClickCapture={() => {
-                      if (!isMobileScreen) return;
-                      setUserInput(message.content);
+                  <div
+                    ref={(el) => {
+                      el ? (divRefs.current[i] = el) : null;
                     }}
-                    fontSize={fontSize}
-                    parentRef={scrollRef}
-                  />
+                  >
+                    <Markdown
+                      content={message.content}
+                      loading={
+                        (message.preview || message.content.length === 0) &&
+                        !isUser
+                      }
+                      onContextMenu={(e) => onRightClick(e, message)}
+                      onDoubleClickCapture={() => {
+                        if (!isMobileScreen) return;
+                        setUserInput(message.content);
+                      }}
+                      fontSize={fontSize}
+                      parentRef={scrollRef}
+                    />
+                  </div>
                 </div>
                 {!isUser && !message.preview && (
                   <div className={styles["chat-message-actions"]}>
