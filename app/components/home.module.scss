@@ -151,6 +151,11 @@
   overflow-x: hidden;
 }
 
+.chat-list {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
 .chat-item {
   padding: 10px 14px;
   background-color: var(--white);
