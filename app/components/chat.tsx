@@ -360,7 +360,6 @@ export function ChatActions(props: {
 }
 
 export function Chat() {
-  console.log("renders");
   type RenderMessage = Message & { preview?: boolean };
 
   const chatStore = useChatStore();
@@ -420,6 +419,16 @@ export function Chat() {
       trailing: true,
     },
   );
+
+  useEffect(() => {
+    setUserInput(session.userInput);
+  }, [session]);
+
+  useEffect(() => {
+    session.userInput = userInput;
+    //updateUserInput(userInput);
+  }, [userInput]);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(measure, [userInput]);
 
