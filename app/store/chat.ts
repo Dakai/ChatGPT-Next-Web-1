@@ -53,7 +53,6 @@ export interface ChatSession {
   lastSummarizeIndex: number;
 
   mask: Mask;
-  userInput: string;
 }
 
 export const DEFAULT_TOPIC = Locale.Store.DefaultTopic;
@@ -76,7 +75,6 @@ function createEmptySession(): ChatSession {
     lastUpdate: Date.now(),
     lastSummarizeIndex: 0,
     mask: createEmptyMask(),
-    userInput: "",
   };
 }
 
@@ -107,6 +105,42 @@ interface ChatStore {
 
   clearAllData: () => void;
 }
+
+interface InputStore {
+  inputArr: string[];
+  prevInputArr: string[];
+  setInput: (index: number, value: string) => void;
+  setPrevInput: (index: number, value: string) => void;
+  isLoading: boolean;
+  setIsLoading: (value: boolean) => void;
+}
+
+export const useInputStore = create<InputStore>((set, get) => ({
+  inputArr: [],
+  setInput: (index: number, value: string) => {
+    set(() => ({
+      inputArr: [
+        ...get().inputArr.slice(0, index),
+        value,
+        ...get().inputArr.slice(index),
+      ],
+    }));
+  },
+  setPrevInput: (index: number, value: string) => {
+    set(() => ({
+      prevInputArr: [
+        ...get().prevInputArr.slice(0, index),
+        value,
+        ...get().prevInputArr.slice(index),
+      ],
+    }));
+  },
+  prevInputArr: [],
+  isLoading: false,
+  setIsLoading: (value: boolean) => {
+    set(() => ({ isLoading: value }));
+  },
+}));
 
 function countMessages(msgs: Message[]) {
   return msgs.reduce((pre, cur) => pre + cur.content.length, 0);
