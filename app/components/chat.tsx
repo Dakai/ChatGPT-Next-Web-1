@@ -1,5 +1,12 @@
 import { useDebouncedCallback } from "use-debounce";
-import { memo, useState, useRef, useEffect, useLayoutEffect } from "react";
+import {
+  memo,
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+} from "react";
 
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
@@ -353,6 +360,7 @@ export function ChatActions(props: {
 }
 
 export function Chat() {
+  console.log("renders");
   type RenderMessage = Message & { preview?: boolean };
 
   const chatStore = useChatStore();
@@ -364,7 +372,7 @@ export function Chat() {
   const fontSize = config.fontSize;
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [userInput, setUserInput] = useState("");
+  const [userInput, setUserInput] = useState(session.userInput);
   const [beforeInput, setBeforeInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { submitKey, shouldSubmit } = useSubmitHandler();
@@ -412,9 +420,14 @@ export function Chat() {
       trailing: true,
     },
   );
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(measure, [userInput]);
+
+  //  useEffect(() => {
+  //    updateUserInput(userInput);
+  //  }, [userInput]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // only search prompts when user input is short
   const SEARCH_TEXT_LIMIT = 30;
@@ -548,7 +561,7 @@ export function Chat() {
         : [],
     )
     .concat(
-      userInput.length > 0 && config.sendPreviewBubble
+      userInput && userInput.length > 0 && config.sendPreviewBubble
         ? [
             {
               ...createMessage({

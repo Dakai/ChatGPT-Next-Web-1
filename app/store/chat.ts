@@ -53,6 +53,7 @@ export interface ChatSession {
   lastSummarizeIndex: number;
 
   mask: Mask;
+  userInput: string;
 }
 
 export const DEFAULT_TOPIC = Locale.Store.DefaultTopic;
@@ -75,6 +76,7 @@ function createEmptySession(): ChatSession {
     lastUpdate: Date.now(),
     lastSummarizeIndex: 0,
     mask: createEmptyMask(),
+    userInput: "",
   };
 }
 
